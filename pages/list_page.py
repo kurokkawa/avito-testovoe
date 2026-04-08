@@ -34,7 +34,7 @@ class ListPage(BasePage):
         return prices
 
     def toggle_urgent(self):
-        self.page.locator('label:has-text("🔥 Только срочные")').click()
+        self.page.locator('label:has-text("Только срочные")').click()
         self.wait_for_update()
 
     def get_items(self):
