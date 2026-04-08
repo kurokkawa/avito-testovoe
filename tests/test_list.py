@@ -1,47 +1,60 @@
-from pages.list_page import ListPage
-
-BASE_URL = "https://cerulean-praline-8e5aa6.netlify.app/list"
-
-
-def test_min_price_filter(page):
-    page_obj = ListPage(page)
-    page_obj.open(BASE_URL)
-
-    page_obj.set_min_price("1000")
-    prices = page_obj.get_prices()
-
-    assert len(prices) > 0, "Нет объявлений"
-    assert all(p >= 1000 for p in prices)
+import re
+from playwright.sync_api import expect
 
 
-def test_max_price_filter(page):
-    page_obj = ListPage(page)
-    page_obj.open(BASE_URL)
-
-    page_obj.set_max_price("10000")
-    prices = page_obj.get_prices()
-
-    assert len(prices) > 0
-    assert all(p <= 10000 for p in prices)
+BASE_URL = "https://cerulean-praline-8e5aa6.netlify.app"
 
 
-def test_sort_price(page):
-    page_obj = ListPage(page)
-    page_obj.open(BASE_URL)
+def test_refresh_button(page):
+    page.goto(BASE_URL)
+    page.click('a[href="/stats"]')
+    page.wait_for_load_state("networkidle")
 
-    page.select_option('select[class="_filters__select_1iunh_21"]', 'asc')
-    page.wait_for_timeout(800)
+    value_loc = page.locator('[class*="_value_"]').first
+    value_loc.wait_for()
+    old_val = value_loc.text_content()
 
-    prices = page_obj.get_prices()
+    # Кликаем "Обновить"
+    page.get_by_role("button", name="Обновить").click()
 
-    assert prices == sorted(prices)
+    # Даем сайту время (некоторые сервера обновляют статистику не мгновенно)
+    page.wait_for_timeout(2000)
+
+    # Проверяем, что текст СТАЛ другим (не "не должен быть старым", а именно изменился)
+    new_val = value_loc.text_content()
+    assert old_val != new_val, f"Значение не обновилось, осталось {old_val}"
 
 
-def test_urgent_filter(page):
-    page_obj = ListPage(page)
-    page_obj.open(BASE_URL)
+def test_stop_timer(page):
+    page.goto(BASE_URL)
+    page.click('text=Статистика')
+    page.wait_for_load_state("networkidle")
 
-    page_obj.toggle_urgent()
+    # Вместо текста с эмодзи используем класс кнопки
+    # Находим кнопку по классу и нажимаем на неё
+    toggle_btn = page.locator('[class*="_toggleButton_"]')
 
-    assert page_obj.get_items().count() > 0
-    assert page_obj.has_urgent_only(), "Есть не срочные объявления"
+    # Кликаем для остановки (если таймер шел)
+    toggle_btn.click()
+
+    # Проверяем, что кнопка перешла в состояние готовности к старту
+    # (Обычно меняется aria-label или title)
+    expect(toggle_btn).to_have_attribute("title", re.compile("Включить", re.IGNORECASE))
+
+def test_start_timer(page):
+    page.goto(BASE_URL)
+    page.click('text=Статистика')
+    page.wait_for_load_state("networkidle")
+
+    toggle_btn = page.locator('[class*="_toggleButton_"]')
+
+    # Сначала гарантируем, что таймер СТОИТ (title должен быть "Включить...")
+    if "Отключить" in (toggle_btn.get_attribute("title") or ""):
+        toggle_btn.click()
+
+    # Теперь нажимаем "Старт"
+    toggle_btn.click()
+
+    # Проверяем, что теперь кнопка предлагает "Отключить" (значит таймер запущен)
+    expect(toggle_btn).to_have_attribute("title", re.compile("Отключить", re.IGNORECASE))
+
