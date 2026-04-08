@@ -2,12 +2,15 @@ def test_theme_switch(page):
     page.set_viewport_size({"width": 375, "height": 812})
     page.goto("https://cerulean-praline-8e5aa6.netlify.app")
 
-    body_before = page.locator("html").get_attribute("class")
+    theme_before = page.locator("html").get_attribute("data-theme")
 
-    page.click("_themeToggle_127us_1")
+    page.click("._themeToggle_127us_1")
 
     page.wait_for_timeout(500)
 
-    body_after = page.locator("body").get_attribute("class")
+    theme_after = page.locator("html").get_attribute("data-theme")
 
-    assert body_before != body_after, "Тема не переключилась"
+    assert theme_before != theme_after, (
+        f"Тема не переключилась в атрибуте data-theme. "
+        f"Было: '{theme_before}', стало: '{theme_after}'"
+    )
