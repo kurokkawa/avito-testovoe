@@ -6,21 +6,24 @@ class ListPage(BasePage):
 
     MIN_PRICE = 'input[placeholder*="От"]'
     MAX_PRICE = 'input[placeholder*="До"]'
-    PRICE_ITEMS = '[data-testid="price"]'
-    ITEM_CARDS = '[data-testid="item"]'
+    PRICE_ITEMS = '[class*="_card__price_"]'
+    ITEM_CARDS = '[class*="_card_"]'
     URGENT_BADGE = 'text=Срочно'
 
     def set_min_price(self, value):
         self.fill(self.MIN_PRICE, value)
+        self.page.keyboard.press("Enter")
         self.wait_for_update()
 
     def set_max_price(self, value):
         self.fill(self.MAX_PRICE, value)
+        self.page.keyboard.press("Enter")
         self.wait_for_update()
 
     def wait_for_update(self):
         # базовое ожидание (можно заменить на loader/network)
-        self.page.wait_for_timeout(800)
+        self.page.wait_for_load_state("networkidle")
+        self.page.wait_for_timeout(1000)
 
     def get_prices(self):
         texts = self.page.locator(self.PRICE_ITEMS).all_text_contents()
