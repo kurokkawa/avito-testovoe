@@ -4,8 +4,8 @@ from .base_page import BasePage
 
 class ListPage(BasePage):
 
-    MIN_PRICE = 'input[placeholder*="Мин"]'
-    MAX_PRICE = 'input[placeholder*="Макс"]'
+    MIN_PRICE = 'input[placeholder*="От"]'
+    MAX_PRICE = 'input[placeholder*="До"]'
     PRICE_ITEMS = '[data-testid="price"]'
     ITEM_CARDS = '[data-testid="item"]'
     URGENT_BADGE = 'text=Срочно'
@@ -34,7 +34,7 @@ class ListPage(BasePage):
         return prices
 
     def toggle_urgent(self):
-        self.click('input[type="checkbox"]')
+        self.page.locator('label:has-text("🔥 Только срочные")').click()
         self.wait_for_update()
 
     def get_items(self):
