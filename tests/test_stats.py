@@ -4,12 +4,12 @@ BASE_URL = "https://cerulean-praline-8e5aa6.netlify.app/stats"
 def test_refresh_button(page):
     page.goto(BASE_URL)
 
-    old_content = page.content()
+    old_content = page.locator("._value_s99h9_85").first.text_content()
 
     page.click("text=Обновить")
     page.wait_for_timeout(1000)
 
-    new_content = page.content()
+    new_content = page.locator("._value_s99h9_85").first.text_content()
 
     assert old_content != new_content, "Страница не обновилась"
 
